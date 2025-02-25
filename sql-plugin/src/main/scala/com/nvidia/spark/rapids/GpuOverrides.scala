@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2024, NVIDIA CORPORATION.
+ * Copyright (c) 2019-2025, NVIDIA CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,6 +32,7 @@ import com.nvidia.spark.rapids.window.{GpuDenseRank, GpuLag, GpuLead, GpuPercent
 import org.apache.hadoop.fs.Path
 
 import org.apache.spark.internal.Logging
+import org.apache.spark.rapids.hybrid.HybridExecutionUtils
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.sql.catalyst.expressions._
 import org.apache.spark.sql.catalyst.expressions.aggregate._
@@ -982,6 +983,12 @@ object GpuOverrides extends Logging {
       ExprChecks.mathUnary,
       (a, conf, p, r) => new UnaryExprMeta[ToRadians](a, conf, p, r) {
         override def convertToGpu(child: Expression): GpuToRadians = GpuToRadians(child)
+      }),
+    expr[Bin](
+      "Returns the string representation of the long value `expr` represented in binary",
+      ExprChecks.unaryProject(TypeSig.STRING, TypeSig.STRING, TypeSig.LONG, TypeSig.LONG),
+      (a, conf, p, r) => new UnaryExprMeta[Bin](a, conf, p, r) {
+        override def convertToGpu(child: Expression): GpuBin = GpuBin(child)
       }),
     expr[WindowExpression](
       "Calculates a return value for every input row of a table based on a group (or " +
@@ -3249,6 +3256,26 @@ object GpuOverrides extends Logging {
       (a, conf, p, r) => new ComplexTypeMergingExprMeta[MapConcat](a, conf, p, r) {
         override def convertToGpu(child: Seq[Expression]): GpuExpression = GpuMapConcat(child)
       }),
+    expr[Slice](
+      "Subsets array x starting from index start (array indices start at 1, " +
+        "or starting from the end if start is negative) with the specified length.",
+      ExprChecks.projectOnly(TypeSig.ARRAY.nested(TypeSig.commonCudfTypes + TypeSig.DECIMAL_128 +
+          TypeSig.NULL + TypeSig.BINARY + TypeSig.ARRAY + TypeSig.STRUCT + TypeSig.MAP),
+        TypeSig.ARRAY.nested(TypeSig.all),
+        Seq(
+          ParamCheck("x",
+            TypeSig.ARRAY.nested(TypeSig.commonCudfTypes + TypeSig.DECIMAL_128 + TypeSig.NULL +
+                TypeSig.BINARY + TypeSig.ARRAY + TypeSig.STRUCT + TypeSig.MAP),
+            TypeSig.ARRAY.nested(TypeSig.all)),
+          ParamCheck("start", TypeSig.INT, TypeSig.INT),
+          ParamCheck("length", TypeSig.INT, TypeSig.INT))),
+      (in, conf, p, r) => new TernaryExprMeta[Slice](in, conf, p, r) {
+        override def convertToGpu(
+            x: Expression,
+            start: Expression,
+            length: Expression): GpuExpression =
+          GpuSlice(x, start, length)
+      }),
     expr[ArrayJoin](
       "Concatenates the elements of the given array using the delimiter and an optional " +
         "string to replace nulls. If no value is set for nullReplacement, any null value " +
@@ -4056,7 +4083,7 @@ object GpuOverrides extends Logging {
       .map(r => r.wrap(part, conf, parent, r).asInstanceOf[PartMeta[INPUT]])
       .getOrElse(new RuleNotFoundPartMeta(part, conf, parent))
 
-  val parts : Map[Class[_ <: Partitioning], PartRule[_ <: Partitioning]] = Seq(
+  private val commonParts : Map[Class[_ <: Partitioning], PartRule[_ <: Partitioning]] = Seq(
     part[HashPartitioning](
       "Hash based partitioning",
       // This needs to match what murmur3 supports.
@@ -4120,6 +4147,9 @@ object GpuOverrides extends Logging {
         override def convertToGpu(): GpuPartitioning = GpuSinglePartitioning
       })
   ).map(r => (r.getClassFor.asSubclass(classOf[Partitioning]), r)).toMap
+
+  val parts : Map[Class[_ <: Partitioning], PartRule[_ <: Partitioning]] =
+    commonParts ++ SparkShimImpl.getPartitionings
 
   def wrapDataWriteCmds[INPUT <: DataWritingCommand](
       writeCmd: INPUT,
@@ -4750,6 +4780,7 @@ case class GpuOverrides() extends Rule[SparkPlan] with Logging {
       GpuOverrides.logDuration(conf.shouldExplain,
         t => f"Plan conversion to the GPU took $t%.2f ms") {
         var updatedPlan = updateForAdaptivePlan(plan, conf)
+        updatedPlan = HybridExecutionUtils.tryToApplyHybridScanRules(updatedPlan, conf)
         updatedPlan = SparkShimImpl.applyShimPlanRules(updatedPlan, conf)
         updatedPlan = applyOverrides(updatedPlan, conf)
         if (conf.logQueryTransformations) {
@@ -4762,6 +4793,7 @@ case class GpuOverrides() extends Rule[SparkPlan] with Logging {
     } else if (conf.isSqlEnabled && conf.isSqlExplainOnlyEnabled) {
       // this mode logs the explain output and returns the original CPU plan
       var updatedPlan = updateForAdaptivePlan(plan, conf)
+      updatedPlan = HybridExecutionUtils.tryToApplyHybridScanRules(updatedPlan, conf)
       updatedPlan = SparkShimImpl.applyShimPlanRules(updatedPlan, conf)
       GpuOverrides.explainCatalystSQLPlan(updatedPlan, conf)
       plan

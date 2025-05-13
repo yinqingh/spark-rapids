@@ -19,6 +19,8 @@ set -ex
 
 . jenkins/version-def.sh
 
+export MVN_PARALLELISM=${MVN_PARALLELISM:-"4"}
+
 ## MVN_OPT : maven options environment, e.g. MVN_OPT='-Dspark-rapids-jni.version=xxx' to specify spark-rapids-jni dependency's version.
 export MVN="mvn -Dmaven.wagon.http.retryHandler.count=3 -DretryFailedDeploymentCount=3 ${MVN_OPT} -Psource-javadoc"
 
@@ -94,6 +96,7 @@ function distWithReducedPom {
 }
 
 function build_shim() {
+  local time1=$(date +%s)
   local BUILD_VER=$1
   local SLOT_ID=$2
   # reuse slot workspace and maven cache to save time
@@ -104,16 +107,17 @@ function build_shim() {
   if [ ! -d "${CODE_PATH}" ]; then
     mkdir -p "${SHIM_WORKSPACE}"
     cp -r "${WORKSPACE}/" "${CODE_PATH}"
-
-    # update SHIM_M2DIR for dev job
-    if [[ "$DEV_MODE" == "true" ]]; then
-      SHIM_M2DIR=${CODE_PATH}/.m2
-    fi
   fi
+
+  # update SHIM_M2DIR for dev job
+  if [[ "$DEV_MODE" == "true" ]]; then
+    SHIM_M2DIR=${CODE_PATH}/.m2
+  fi
+
   cd "${CODE_PATH}"
   echo "Workspace at ${CODE_PATH}..."
 
-  local BUILD_CMD="$MVN -U -B clean install $MVN_URM_MIRROR -Dmaven.repo.local=$SHIM_M2DIR \
+  local BUILD_CMD="$MVN -T $MVN_PARALLELISM -U -B clean install $MVN_URM_MIRROR -Dmaven.repo.local=$SHIM_M2DIR \
     -Dcuda.version=$DEFAULT_CUDA_CLASSIFIER \
     -DskipTests -Drat.skip=true -Djava.io.tmpdir=${SHIM_WORKSPACE} \
     -Dbuildver=${BUILD_VER}"
@@ -163,6 +167,8 @@ function build_shim() {
     fi
   fi
 
+  local time2=$(date +%s)
+  echo "Build time: $((time2 - time1)) seconds"
   echo "${BUILD_VER} done."
 }
 export -f build_shim
@@ -192,7 +198,7 @@ fi
 installDistArtifact() {
   local cuda_version="$1"
   local opt="$2"
-  $MVN -B clean install \
+  $MVN -T $MVN_PARALLELISM -U -B clean install \
       $opt \
       $DIST_PROFILE_OPT \
       -Dbuildver=$SPARK_BASE_SHIM_VERSION \

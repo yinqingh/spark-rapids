@@ -16,7 +16,7 @@
 
 
 # PWD should be dist/target
-set -e
+set -ex
 
 start_time=$(date +%s)
 
@@ -56,8 +56,12 @@ echo "Retrieving class files hashing to a single value ..."
 
 
 echo "$((++STEP))/ SHA1 of all non-META files > tmp-sha1-files.txt"
+
+time1=$(date +%s)
 find ./parallel-world/spark[34]* -name META-INF -prune -o -name webapps -prune -o \( -type f -print0 \) | \
-  xargs --null $SHASUM > tmp-sha1-files.txt
+  xargs --null -n 1000 $SHASUM > tmp-sha1-files.txt
+time2=$(date +%s)
+echo "find time: $((time2 - time1)) seconds"
 
 echo "$((++STEP))/ make shim column 1 > tmp-shim-sha-package-files.txt"
 < tmp-sha1-files.txt awk -F/ '$1=$1' | \
@@ -74,7 +78,7 @@ grep '^\s\+1 .*' tmp-count-shim-sha-package-files.txt | \
   tr -s ' ' | sed 's/\ /\//g' > "$SPARK_SHARED_TXT"
 
 function retain_single_copy() {
-  set -e
+  set -ex
   class_resource="$1"
   # example input: /spark320/com/nvidia/spark/udf/Repr$UnknownCapturedArg$.class
 
@@ -109,6 +113,7 @@ function retain_single_copy() {
 rm -f from-spark[34]*-to-spark-shared.txt
 rm -rf "$SPARK_SHARED_DIR"
 mkdir -p "$SPARK_SHARED_DIR"
+cat "$DELETE_DUPLICATES_TXT"
 
 echo "$((++STEP))/ retaining a single copy of spark-shared classes"
 while read spark_common_class; do

@@ -59,7 +59,7 @@ echo "$((++STEP))/ SHA1 of all non-META files > tmp-sha1-files.txt"
 
 time1=$(date +%s)
 find ./parallel-world/spark[34]* -name META-INF -prune -o -name webapps -prune -o \( -type f -print0 \) | \
-  xargs --null -n 1000 $SHASUM > tmp-sha1-files.txt
+  xargs --null -n 100 $SHASUM > tmp-sha1-files.txt
 time2=$(date +%s)
 echo "find time: $((time2 - time1)) seconds"
 

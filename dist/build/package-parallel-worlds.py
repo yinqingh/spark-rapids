@@ -37,8 +37,8 @@ project_version = project.getProperty('project.version')
 scala_version = project.getProperty('scala.binary.version')
 project_build_dir = project.getProperty('project.build.directory')
 deps_dir = os.sep.join([project_build_dir, 'deps'])
-top_dist_jar_dir = os.path.join('/tmp', 'debug_test')
-actual_top_dist_jar_dir = os.sep.join([project_build_dir, 'parallel-world'])
+# top_dist_jar_dir = os.path.join('/tmp', 'debug_test')
+top_dist_jar_dir = os.sep.join([project_build_dir, 'parallel-world'])
 urm_url = project.getProperty('env.URM_URL')
 jenkins_settings = os.sep.join([source_basedir, 'jenkins', 'settings.xml'])
 repo_local = project.getProperty('maven.repo.local')
@@ -111,19 +111,19 @@ for bv in buildver_list:
         end_time = time.time()
         print('total_time: {} seconds'.format(end_time - start_time))
 
-# copy the files from top_dist_jar_dir to actual_top_dist_jar_dir
-x = time.time()
-# shutil.copytree(top_dist_jar_dir, actual_top_dist_jar_dir)
-subprocess.check_call(['rsync', '-axz', '--zc=zstd', '--checksum', '--ignore-existing', top_dist_jar_dir + '/', actual_top_dist_jar_dir + '/'])
-y = time.time()
-print('copy time: {} seconds'.format(y - x))
+# # copy the files from top_dist_jar_dir to actual_top_dist_jar_dir
+# x = time.time()
+# # shutil.copytree(top_dist_jar_dir, actual_top_dist_jar_dir)
+# subprocess.check_call(['rsync', '-axz', '--zc=zstd', '--checksum', '--ignore-existing', top_dist_jar_dir + '/', actual_top_dist_jar_dir + '/'])
+# y = time.time()
+# print('copy time: {} seconds'.format(y - x))
 
-# print the count of all files in top_dist_jar_dir and subdirectories
-file_count = 0
-for root, dirs, files in os.walk(actual_top_dist_jar_dir):
-    for _ in files:
-        file_count += 1
-print('{} file count: {}'.format(actual_top_dist_jar_dir, file_count))
+# # print the count of all files in top_dist_jar_dir and subdirectories
+# file_count = 0
+# for root, dirs, files in os.walk(actual_top_dist_jar_dir):
+#     for _ in files:
+#         file_count += 1
+# print('{} file count: {}'.format(actual_top_dist_jar_dir, file_count))
 
 all_time_end = time.time()
 print('all_time: {} seconds'.format(all_time_end - all_time_start))

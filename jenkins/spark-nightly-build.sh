@@ -19,7 +19,7 @@ set -ex
 
 . jenkins/version-def.sh
 
-export MVN_PARALLELISM=${MVN_PARALLELISM:-"4"}
+export MVN_PARALLELISM=${MVN_PARALLELISM:-"2"}
 
 ## MVN_OPT : maven options environment, e.g. MVN_OPT='-Dspark-rapids-jni.version=xxx' to specify spark-rapids-jni dependency's version.
 export MVN="mvn -Dmaven.wagon.http.retryHandler.count=3 -DretryFailedDeploymentCount=3 ${MVN_OPT} -Psource-javadoc"

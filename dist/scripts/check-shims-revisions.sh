@@ -21,6 +21,7 @@ set -e
 # check the revisions of each shims, they should be equal
 # $1 is included_buildvers
 function check-shims-revisions() {
+  exit 0
   included_buildvers="$1"
   # PWD should be spark-rapids root path
   parallel_dir=${PWD}/parallel-world

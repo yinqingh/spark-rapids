@@ -36,6 +36,8 @@ if [ $SCALA_BINARY_VER == "2.13" ]; then
 fi
 
 export WORKSPACE=${WORKSPACE:-$(pwd)}
+# change to the workspace directory
+cd $WORKSPACE
 ## export 'M2DIR' so that shims can get the correct Spark dependency info
 export M2DIR=${M2DIR:-"$WORKSPACE/.m2"}
 ## DEV_MODE: if true, copy M2DIR to SHIM_M2DIR for dev CI job

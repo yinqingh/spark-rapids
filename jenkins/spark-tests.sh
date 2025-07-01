@@ -290,7 +290,7 @@ run_non_utc_time_zone_tests() {
   echo "Run Non-UTC tests, time zone is ${time_zone}"
 
   # run tests
-  TZ=${time_zone} ./run_pyspark_from_build.sh
+  TZ=${time_zone} ./run_pyspark_from_build.sh -m tz_sensitive_test
 }
 
 # TEST_MODE

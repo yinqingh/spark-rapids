@@ -254,26 +254,24 @@ run_iceberg_tests() {
       ./run_pyspark_from_build.sh -m iceberg --iceberg
   elif [[ "$test_type" == "rest" ]]; then
     echo "!!! Running iceberg tests with rest catalog"
-    bash jenkins/iceberg/rest/setup.sh
     ICEBERG_REST_JARS="org.apache.iceberg:iceberg-spark-runtime-${ICEBERG_SPARK_VER}_${SCALA_BINARY_VER}:${ICEBERG_VERSION},\
-    org.apache.iceberg:iceberg-aws-bundle:${ICEBERG_VERSION}"
+org.apache.iceberg:iceberg-aws-bundle:${ICEBERG_VERSION}"
         # Latest iceberg has some updates which may increase memory usage, such as metadata cache.
         # Disabling them may slow down the tests, so we increase memory here.
         ICEBERG_TEST_REMOTE_CATALOG='1' \
         env 'PYSP_TEST_spark_sql_catalog_spark__catalog_table-default_write_spark_fanout_enabled=false' \
         PYSP_TEST_spark_driver_memory="6G" \
         PYSP_TEST_spark_jars_packages="${ICEBERG_REST_JARS}" \
+        PYSP_TEST_spark_jars_repositories=${PROJECT_REPO} \
           PYSP_TEST_spark_sql_extensions="org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions" \
           PYSP_TEST_spark_sql_catalog_spark__catalog="org.apache.iceberg.spark.SparkSessionCatalog" \
           PYSP_TEST_spark_sql_catalog_spark__catalog_catalog-impl="org.apache.iceberg.rest.RESTCatalog" \
-          PYSP_TEST_spark_sql_catalog_spark__catalog_uri="http://localhost:8181/catalog/" \
-          PYSP_TEST_spark_sql_catalog_spark__catalog_credential="spark:2OR3eRvYfSZzzZ16MlPd95jhLnOaLM52" \
-          PYSP_TEST_spark_sql_catalog_spark__catalog_oauth2-server-uri="http://localhost:8080/realms/iceberg/protocol/openid-connect/token" \
-          PYSP_TEST_spark_sql_catalog_spark__catalog_scope="lakekeeper" \
-          PYSP_TEST_spark_sql_catalog_spark__catalog_warehouse="demo" \
-          ./run_pyspark_from_build.sh -m iceberg --iceberg
-
-    bash jenkins/iceberg/rest/teardown.sh
+          PYSP_TEST_spark_sql_catalog_spark__catalog_uri="${ICEBERG_REST_CATALOG_URI:-'http://localhost:8181/catalog/'}" \
+          PYSP_TEST_spark_sql_catalog_spark__catalog_credential="${ICEBERG_REST_CREDENTIAL}" \
+          PYSP_TEST_spark_sql_catalog_spark__catalog_oauth2-server-uri="${ICEBERG_REST_OAUTH2_SERVER_URI:-'http://localhost:8080/realms/iceberg/protocol/openid-connect/token'}" \
+          PYSP_TEST_spark_sql_catalog_spark__catalog_scope="${ICEBERG_REST_SCOPE:-'lakekeeper'}" \
+          PYSP_TEST_spark_sql_catalog_spark__catalog_warehouse="${ICEBERG_REST_WAREHOUSE:-'demo'}" \
+          ./run_pyspark_from_build.sh -m iceberg --iceberg -k 'iceberg_test.py'
   elif [[ "$test_type" == "s3tables" ]]; then
     echo "!!! Running iceberg tests with s3tables"
     # AWS deps versions for Spark 3.5.x
@@ -363,6 +361,7 @@ run_non_utc_time_zone_tests() {
 # - DELTA_LAKE_ONLY: Delta Lake tests only
 # - ICEBERG_ONLY: iceberg tests only
 # - ICEBERG_S3TABLES_ONLY: iceberg s3tables tests only
+# - ICEBERG_REST_CATALOG_ONLY: iceberg rest catalog tests only
 # - AVRO_ONLY: avro tests only (with --packages option instead of --jars)
 # - CUDF_UDF_ONLY: cudf_udf tests only, requires extra conda cudf-py lib
 # - MULTITHREADED_SHUFFLE: shuffle tests only
@@ -403,12 +402,16 @@ fi
 # Iceberg tests
 if [[ "$TEST_MODE" == "DEFAULT" || "$TEST_MODE" == "ICEBERG_ONLY" ]]; then
   run_iceberg_tests
-  run_iceberg_tests 'rest'
 fi
 
 # Iceberg s3tables tests
 if [[ "$TEST_MODE" == "ICEBERG_S3TABLES_ONLY" ]]; then
   run_iceberg_tests 's3tables'
+fi
+
+# Iceberg rest tests
+if [[ "$TEST_MODE" == "ICEBERG_REST_CATALOG_ONLY" ]]; then
+  run_iceberg_tests 'rest'
 fi
 
 # Avro tests

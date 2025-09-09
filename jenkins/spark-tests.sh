@@ -369,6 +369,8 @@ TEST_MODE=${TEST_MODE:-'DEFAULT'}
 if [[ $TEST_MODE == "DEFAULT" ]]; then
   ./run_pyspark_from_build.sh
 
+  exit 1
+
   SPARK_SHELL_SMOKE_TEST=1 \
   PYSP_TEST_spark_shuffle_manager=com.nvidia.spark.rapids.${SHUFFLE_SPARK_SHIM}.RapidsShuffleManager \
     ./run_pyspark_from_build.sh

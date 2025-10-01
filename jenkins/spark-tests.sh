@@ -253,13 +253,13 @@ run_iceberg_tests() {
     echo "!!! Running iceberg tests with rest catalog"
     ICEBERG_REST_JARS="org.apache.iceberg:iceberg-spark-runtime-${ICEBERG_SPARK_VER}_${SCALA_BINARY_VER}:${ICEBERG_VERSION},\
 org.apache.iceberg:iceberg-aws-bundle:${ICEBERG_VERSION}"
+        env 'PYSP_TEST_spark_sql_catalog_spark__catalog_catalog-impl="org.apache.iceberg.rest.RESTCatalog"' \
         ICEBERG_TEST_REMOTE_CATALOG='1' \
         PYSP_TEST_spark_driver_memory="6G" \
         PYSP_TEST_spark_jars_packages="${ICEBERG_REST_JARS}" \
         PYSP_TEST_spark_jars_repositories=${PROJECT_REPO} \
           PYSP_TEST_spark_sql_extensions="org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions" \
           PYSP_TEST_spark_sql_catalog_spark__catalog="org.apache.iceberg.spark.SparkSessionCatalog" \
-          env 'PYSP_TEST_spark_sql_catalog_spark__catalog_catalog-impl="org.apache.iceberg.rest.RESTCatalog"' \
           PYSP_TEST_spark_sql_catalog_spark__catalog_uri="${ICEBERG_REST_CATALOG_URI:-'http://localhost:8181/catalog/'}" \
           PYSP_TEST_spark_sql_catalog_spark__catalog_credential="${ICEBERG_REST_CREDENTIAL}" \
           PYSP_TEST_spark_sql_catalog_spark__catalog_oauth2-server-uri="${ICEBERG_REST_OAUTH2_SERVER_URI:-'http://localhost:8080/realms/iceberg/protocol/openid-connect/token'}" \

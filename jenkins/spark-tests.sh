@@ -381,6 +381,7 @@ run_non_utc_time_zone_tests() {
 # - AVRO_ONLY: avro tests only (with --packages option instead of --jars)
 # - CUDF_UDF_ONLY: cudf_udf tests only, requires extra conda cudf-py lib
 # - MULTITHREADED_SHUFFLE: shuffle tests only
+# - EXTRA_JOIN_ONLY: extra join modes tests only
 # - NON_UTC_TZ: test all tests in a non-UTC time zone which is selected according to current day of week.
 TEST_MODE=${TEST_MODE:-'DEFAULT'}
 if [[ $TEST_MODE == "DEFAULT" ]]; then
@@ -464,7 +465,8 @@ if [[ "$TEST_MODE" == "DEFAULT" || "$TEST_MODE" == "PYARROW_ONLY" ]]; then
   run_pyarrow_tests
 fi
 
-if [[ "$TEST_MODE" == "DEFAULT" || "$TEST_MODE" == "EXTRA_JOIN_ONLY" ]]; then
+# Extra join modes tests
+if [[ "$TEST_MODE" == "EXTRA_JOIN_ONLY" ]]; then
   run_other_join_modes_tests
 fi
 

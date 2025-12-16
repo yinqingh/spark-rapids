@@ -30,13 +30,22 @@ rm -rf $ARTF_ROOT && mkdir -p $ARTF_ROOT
 $WGET_CMD $PROJECT_TEST_REPO/com/nvidia/rapids-4-spark-integration-tests_$SCALA_BINARY_VER/$PROJECT_TEST_VER/rapids-4-spark-integration-tests_$SCALA_BINARY_VER-$PROJECT_TEST_VER-${SHUFFLE_SPARK_SHIM}.jar
 
 CLASSIFIER=${CLASSIFIER:-"$CUDA_CLASSIFIER"} # default as CUDA_CLASSIFIER for compatibility
-if [ "$CLASSIFIER"x == x ];then
-    $WGET_CMD $PROJECT_REPO/com/nvidia/rapids-4-spark_$SCALA_BINARY_VER/$PROJECT_VER/rapids-4-spark_$SCALA_BINARY_VER-${PROJECT_VER}.jar
-    export RAPIDS_PLUGIN_JAR=$ARTF_ROOT/rapids-4-spark_${SCALA_BINARY_VER}-${PROJECT_VER}.jar
+# if [ "$CLASSIFIER"x == x ];then
+#     $WGET_CMD $PROJECT_REPO/com/nvidia/rapids-4-spark_$SCALA_BINARY_VER/$PROJECT_VER/rapids-4-spark_$SCALA_BINARY_VER-${PROJECT_VER}.jar
+#     export RAPIDS_PLUGIN_JAR=$ARTF_ROOT/rapids-4-spark_${SCALA_BINARY_VER}-${PROJECT_VER}.jar
+# else
+#     $WGET_CMD $PROJECT_REPO/com/nvidia/rapids-4-spark_$SCALA_BINARY_VER/$PROJECT_VER/rapids-4-spark_$SCALA_BINARY_VER-$PROJECT_VER-${CLASSIFIER}.jar
+#     export RAPIDS_PLUGIN_JAR="$ARTF_ROOT/rapids-4-spark_${SCALA_BINARY_VER}-$PROJECT_VER-${CLASSIFIER}.jar"
+# fi
+
+if [[ "$SCALA_BINARY_VER" == "2.13" ]]; then
+  $WGET_CMD https://urm.nvidia.com/artifactory/sw-spark-maven/com/nvidia/rapids-4-spark_2.13-dev/26.02.0-SNAPSHOT/rapids-4-spark_2.13-dev-26.02.0-20251216.031000-1-cuda12.jar
+  export RAPIDS_PLUGIN_JAR="$ARTF_ROOT/rapids-4-spark_2.13-dev-26.02.0-20251216.031000-1-cuda12.jar"
 else
-    $WGET_CMD $PROJECT_REPO/com/nvidia/rapids-4-spark_$SCALA_BINARY_VER/$PROJECT_VER/rapids-4-spark_$SCALA_BINARY_VER-$PROJECT_VER-${CLASSIFIER}.jar
-    export RAPIDS_PLUGIN_JAR="$ARTF_ROOT/rapids-4-spark_${SCALA_BINARY_VER}-$PROJECT_VER-${CLASSIFIER}.jar"
+  $WGET_CMD https://urm.nvidia.com/artifactory/sw-spark-maven/com/nvidia/rapids-4-spark_2.12-dev/26.02.0-SNAPSHOT/rapids-4-spark_2.12-dev-26.02.0-20251216.033200-4-cuda12.jar
+  export RAPIDS_PLUGIN_JAR="$ARTF_ROOT/rapids-4-spark_2.12-dev-26.02.0-20251216.033200-4-cuda12.jar"
 fi
+
 RAPIDS_TEST_JAR="$ARTF_ROOT/rapids-4-spark-integration-tests_${SCALA_BINARY_VER}-$PROJECT_TEST_VER-$SHUFFLE_SPARK_SHIM.jar"
 
 export INCLUDE_SPARK_AVRO_JAR=${INCLUDE_SPARK_AVRO_JAR:-"true"}
@@ -101,6 +110,7 @@ export SPARK_HOME="$ARTF_ROOT/spark-$SPARK_VER-$BIN_HADOOP_VER"
 export PATH="$SPARK_HOME/bin:$SPARK_HOME/sbin:$PATH"
 tar zxf $SPARK_HOME.tgz -C $ARTF_ROOT && \
     rm -f $SPARK_HOME.tgz
+echo "spark.rapids.cudfVersionOverride true" >> $SPARK_HOME/conf/spark-defaults.conf
 # copy python path libs to container /tmp instead of workspace to avoid ephemeral PVC issue
 TMP_PYTHON=/tmp/$(date +"%Y%m%d")
 rm -rf $TMP_PYTHON && mkdir -p $TMP_PYTHON && cp -r $SPARK_HOME/python $TMP_PYTHON
@@ -267,7 +277,8 @@ run_iceberg_tests() {
   local test_type=${1:-'default'}
   if [[ "$test_type" == "default" ]]; then
     echo "!!! Running iceberg tests"
-    PYSP_TEST_spark_driver_memory="6G" \
+    PYSP_TEST_spark_driver_memory=6G \
+    PYSP_TEST_spark_executor_memory=6G \
     PYSP_TEST_spark_jars_packages=org.apache.iceberg:iceberg-spark-runtime-${ICEBERG_SPARK_VER}_${SCALA_BINARY_VER}:${ICEBERG_VERSION} \
       PYSP_TEST_spark_sql_extensions="org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions" \
       PYSP_TEST_spark_sql_catalog_spark__catalog="org.apache.iceberg.spark.SparkSessionCatalog" \
@@ -281,6 +292,7 @@ org.apache.iceberg:iceberg-aws-bundle:${ICEBERG_VERSION}"
         env \
           ICEBERG_TEST_REMOTE_CATALOG=1 \
           PYSP_TEST_spark_driver_memory=6G \
+          PYSP_TEST_spark_executor_memory=6G \
           PYSP_TEST_spark_jars_packages="${ICEBERG_REST_JARS}" \
           PYSP_TEST_spark_jars_repositories="${PROJECT_REPO}" \
           PYSP_TEST_spark_sql_extensions="org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions" \
@@ -322,6 +334,7 @@ com.amazonaws:aws-java-sdk-bundle:${AWS_SDK_BUNDLE_VERSION}"
     env \
       ICEBERG_TEST_REMOTE_CATALOG=1 \
       PYSP_TEST_spark_driver_memory=6G \
+      PYSP_TEST_spark_executor_memory=6G \
       PYSP_TEST_spark_jars_packages="${ICEBERG_S3TABLES_JARS}" \
       PYSP_TEST_spark_jars_repositories="${PROJECT_REPO}" \
       PYSP_TEST_spark_sql_extensions="org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions" \

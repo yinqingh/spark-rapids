@@ -32,22 +32,25 @@ ARTF_ROOT="$WORKSPACE/jars"
 WGET_CMD="wget -q -P $ARTF_ROOT -t 3"
 
 rm -rf $ARTF_ROOT && mkdir -p $ARTF_ROOT
-$WGET_CMD $PROJECT_TEST_REPO/com/nvidia/rapids-4-spark-integration-tests_$SCALA_BINARY_VER/$PROJECT_TEST_VER/rapids-4-spark-integration-tests_$SCALA_BINARY_VER-$PROJECT_TEST_VER-${SHUFFLE_SPARK_SHIM}.jar
+# $WGET_CMD $PROJECT_TEST_REPO/com/nvidia/rapids-4-spark-integration-tests_$SCALA_BINARY_VER/$PROJECT_TEST_VER/rapids-4-spark-integration-tests_$SCALA_BINARY_VER-$PROJECT_TEST_VER-${SHUFFLE_SPARK_SHIM}.jar
+$WGET_CMD http://spark-yinqing.client.nvidia.com:8000/rapids-4-spark-integration-tests_2.13-26.02.0-SNAPSHOT-spark401.jar
 
 CLASSIFIER=${CLASSIFIER:-"$CUDA_CLASSIFIER"} # default as CUDA_CLASSIFIER for compatibility
-if [ "$CLASSIFIER"x == x ];then
-    $WGET_CMD $PROJECT_REPO/com/nvidia/rapids-4-spark_$SCALA_BINARY_VER/$PROJECT_VER/rapids-4-spark_$SCALA_BINARY_VER-${PROJECT_VER}.jar
-    export RAPIDS_PLUGIN_JAR=$ARTF_ROOT/rapids-4-spark_${SCALA_BINARY_VER}-${PROJECT_VER}.jar
-else
-    $WGET_CMD $PROJECT_REPO/com/nvidia/rapids-4-spark_$SCALA_BINARY_VER/$PROJECT_VER/rapids-4-spark_$SCALA_BINARY_VER-$PROJECT_VER-${CLASSIFIER}.jar
-    export RAPIDS_PLUGIN_JAR="$ARTF_ROOT/rapids-4-spark_${SCALA_BINARY_VER}-$PROJECT_VER-${CLASSIFIER}.jar"
-fi
+# if [ "$CLASSIFIER"x == x ];then
+#     $WGET_CMD $PROJECT_REPO/com/nvidia/rapids-4-spark_$SCALA_BINARY_VER/$PROJECT_VER/rapids-4-spark_$SCALA_BINARY_VER-${PROJECT_VER}.jar
+#     export RAPIDS_PLUGIN_JAR=$ARTF_ROOT/rapids-4-spark_${SCALA_BINARY_VER}-${PROJECT_VER}.jar
+# else
+#     $WGET_CMD $PROJECT_REPO/com/nvidia/rapids-4-spark_$SCALA_BINARY_VER/$PROJECT_VER/rapids-4-spark_$SCALA_BINARY_VER-$PROJECT_VER-${CLASSIFIER}.jar
+#     export RAPIDS_PLUGIN_JAR="$ARTF_ROOT/rapids-4-spark_${SCALA_BINARY_VER}-$PROJECT_VER-${CLASSIFIER}.jar"
+# fi
+$WGET_CMD https://urm.nvidia.com/artifactory/sw-spark-maven/com/nvidia/rapids-4-spark_2.13-dev/26.02.0-SNAPSHOT/rapids-4-spark_2.13-dev-26.02.0-20251223.013122-2-cuda12.jar
+export RAPIDS_PLUGIN_JAR="$ARTF_ROOT/rapids-4-spark_2.13-dev-26.02.0-20251223.013122-2-cuda12.jar"
 RAPIDS_TEST_JAR="$ARTF_ROOT/rapids-4-spark-integration-tests_${SCALA_BINARY_VER}-$PROJECT_TEST_VER-$SHUFFLE_SPARK_SHIM.jar"
 
-export INCLUDE_SPARK_AVRO_JAR=${INCLUDE_SPARK_AVRO_JAR:-"true"}
-if [[ "${INCLUDE_SPARK_AVRO_JAR}" == "true" ]]; then
-  $WGET_CMD $SPARK_REPO/org/apache/spark/spark-avro_$SCALA_BINARY_VER/$SPARK_VER/spark-avro_$SCALA_BINARY_VER-${SPARK_VER}.jar
-fi
+# export INCLUDE_SPARK_AVRO_JAR=${INCLUDE_SPARK_AVRO_JAR:-"true"}
+# if [[ "${INCLUDE_SPARK_AVRO_JAR}" == "true" ]]; then
+#   $WGET_CMD $SPARK_REPO/org/apache/spark/spark-avro_$SCALA_BINARY_VER/$SPARK_VER/spark-avro_$SCALA_BINARY_VER-${SPARK_VER}.jar
+# fi
 
 $WGET_CMD $PROJECT_TEST_REPO/com/nvidia/rapids-4-spark-integration-tests_$SCALA_BINARY_VER/$PROJECT_TEST_VER/rapids-4-spark-integration-tests_$SCALA_BINARY_VER-$PROJECT_TEST_VER-pytest.tar.gz
 

@@ -138,6 +138,11 @@ function build_shim() {
       SRC_DIR="${SHIM_M2DIR}/com/nvidia/${mod}/${ART_VER}"
       DEST_DIR="${M2DIR}/com/nvidia/${mod}/${ART_VER}"
 
+      echo "DEBUG123: $SRC_DIR"
+      ls -al $SRC_DIR
+      echo "DEBUG123: $DEST_DIR"
+      ls -al $DEST_DIR
+
       if [[ -d "$SRC_DIR" ]]; then
         mkdir -p "$DEST_DIR"
         rsync -av --checksum --ignore-existing "${SRC_DIR}/" "${DEST_DIR}/"
@@ -193,14 +198,18 @@ fi
 installDistArtifact() {
   local cuda_version="$1"
   local opt="$2"
-  $MVN -B clean install \
+  $MVN -B -X clean install \
       $opt \
       $DIST_PROFILE_OPT \
       -Dbuildver=$SPARK_BASE_SHIM_VERSION \
+      -Ddyn.shim.trace=true \
       $MVN_URM_MIRROR \
       -Dmaven.repo.local=$M2DIR \
       -Dcuda.version=$cuda_version \
       -DskipTests
+
+  echo "DEBUG123: $M2DIR"
+  find $M2DIR/com/nvidia -type f
 }
 
 # TODO: parallel build for different cuda classifiers
@@ -222,6 +231,8 @@ if (( ${#CLASSIFIERS_ARR[@]} > 1 )); then
     # move artifacts to temp for deployment later
     artifactFile="${ART_ID}-${ART_VER}-${classifier}.jar"
     mv ${DIST_PATH}/target/${artifactFile} ${TMP_PATH}/
+
+    md5sum ${TMP_PATH}/${artifactFile} || true
   done
 fi
 # build dist w/ default cuda classifier

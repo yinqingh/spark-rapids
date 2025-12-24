@@ -249,6 +249,38 @@
                 <artifactId>maven-antrun-plugin</artifactId>
                 <executions>
                     <execution>
+                        <id>list-jar-contents</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <echo level="info">Listing contents of ${dist.jar.name} ...</echo>
+                                <exec executable="jar" failonerror="true">
+                                    <arg value="tf"/>
+                                    <arg value="${dist.jar.name}"/>
+                                </exec>
+                                
+                                <echo level="info">Calculating MD5 of ${dist.jar.name} ...</echo>
+                                <checksum file="${dist.jar.name}" algorithm="MD5" property="jarMd5"/>
+                                <echo level="info">MD5: ${jarMd5}</echo>
+
+                                <echo level="info">Grepping for RapidsShuffleManager in ${dist.jar.name} ...</echo>
+                                <exec executable="bash" failonerror="false">
+                                    <arg value="-c"/>
+                                    <arg value="jar tf ${dist.jar.name} | grep RapidsShuffleManager || echo 'RapidsShuffleManager not found'"/>
+                                </exec>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <executions>
+                    <execution>
                         <!-- ensure a phase preceding create-parallel-world and copy-current -->
                         <phase>initialize</phase>
                         <goals>

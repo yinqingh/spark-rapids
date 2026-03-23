@@ -293,10 +293,12 @@ run_iceberg_tests() {
     echo "Running Iceberg tests for Iceberg version $ICEBERG_VERSION"
     if [[ "$test_type" == "default" ]]; then
       echo "!!! Running iceberg tests"
-      PYSP_TEST_spark_driver_memory=6G \
-      PYSP_TEST_spark_executor_memory=6G \
+      env \
+      PYSP_TEST_spark_driver_memory=1G \
+      PYSP_TEST_spark_executor_memory=2G \
       PYSP_TEST_spark_jars_packages=org.apache.iceberg:iceberg-spark-runtime-${ICEBERG_SPARK_VER}_${SCALA_BINARY_VER}:${ICEBERG_VERSION} \
         PYSP_TEST_spark_sql_extensions="org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions" \
+        PYSP_TEST_spark_sql_catalog_spark__catalog_table-default_write_spark_fanout_enabled=false \
         PYSP_TEST_spark_sql_catalog_spark__catalog="org.apache.iceberg.spark.SparkSessionCatalog" \
         PYSP_TEST_spark_sql_catalog_spark__catalog_type="hadoop" \
         PYSP_TEST_spark_sql_catalog_spark__catalog_warehouse="/tmp/spark-warehouse-$RANDOM" \
@@ -311,7 +313,7 @@ org.apache.iceberg:iceberg-aws-bundle:${ICEBERG_VERSION}"
           env \
             ICEBERG_TEST_CATALOG_TYPE="rest" \
             ICEBERG_TEST_REMOTE_CATALOG=1 \
-            PYSP_TEST_spark_driver_memory=6G \
+            PYSP_TEST_spark_driver_memory=2G \
             PYSP_TEST_spark_executor_memory=6G \
             PYSP_TEST_spark_rapids_filecache_enabled=true \
             PYSP_TEST_spark_jars_packages="${ICEBERG_REST_JARS}" \
@@ -357,7 +359,7 @@ com.amazonaws:aws-java-sdk-bundle:${AWS_SDK_BUNDLE_VERSION}"
       # FileCacheManager is initialized at executor startup time.
       env \
         ICEBERG_TEST_REMOTE_CATALOG=1 \
-        PYSP_TEST_spark_driver_memory=6G \
+        PYSP_TEST_spark_driver_memory=2G \
         PYSP_TEST_spark_executor_memory=6G \
         PYSP_TEST_spark_rapids_filecache_enabled=true \
         PYSP_TEST_spark_jars_packages="${ICEBERG_S3TABLES_JARS}" \

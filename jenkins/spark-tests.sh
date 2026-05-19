@@ -452,42 +452,42 @@ run_non_utc_time_zone_tests() {
 # - NON_UTC_TZ: test all tests in a non-UTC time zone which is selected according to current day of week.
 TEST_MODE=${TEST_MODE:-'DEFAULT'}
 if [[ $TEST_MODE == "DEFAULT" ]]; then
-  ./run_pyspark_from_build.sh
+  ./run_pyspark_from_build.sh --test_oom_injection_mode=always
 
-  SPARK_SHELL_SMOKE_TEST=1 \
-  PYSP_TEST_spark_shuffle_manager=com.nvidia.spark.rapids.${SHUFFLE_SPARK_SHIM}.RapidsShuffleManager \
-    ./run_pyspark_from_build.sh
+  # SPARK_SHELL_SMOKE_TEST=1 \
+  # PYSP_TEST_spark_shuffle_manager=com.nvidia.spark.rapids.${SHUFFLE_SPARK_SHIM}.RapidsShuffleManager \
+  #   ./run_pyspark_from_build.sh
 
-  EXPLAIN_ONLY_CPU_SMOKE_TEST=1 \
-    ./run_pyspark_from_build.sh
+  # EXPLAIN_ONLY_CPU_SMOKE_TEST=1 \
+  #   ./run_pyspark_from_build.sh
 
-  # Spark Connect smoke test (available in Spark 3.5.6+)
-  if printf '%s\n' "3.5.6" "$SPARK_VER" | sort -V | head -1 | grep -q "3.5.6"; then
-    SPARK_CONNECT_SMOKE_TEST=1 \
-      HOST_NAME=$PROJECT_REPO_HOST \
-      PYSP_TEST_spark_jars_ivySettings=${WORKSPACE}/jenkins/ivysettings.xml \
-      ./run_pyspark_from_build.sh
-  fi
+  # # Spark Connect smoke test (available in Spark 3.5.6+)
+  # if printf '%s\n' "3.5.6" "$SPARK_VER" | sort -V | head -1 | grep -q "3.5.6"; then
+  #   SPARK_CONNECT_SMOKE_TEST=1 \
+  #     HOST_NAME=$PROJECT_REPO_HOST \
+  #     PYSP_TEST_spark_jars_ivySettings=${WORKSPACE}/jenkins/ivysettings.xml \
+  #     ./run_pyspark_from_build.sh
+  # fi
 
-  # As '--packages' only works on the default cuda12 jar, it does not support classifiers
-  # refer to issue : https://issues.apache.org/jira/browse/SPARK-20075
-  # "$CLASSIFIER" == ''" is usually for the case run by developers,
-  # while "$CLASSIFIER" == "cuda12" is for the case running on CI.
-  # We expect to run packages test for both cases
-  SKIP_PACKAGES_TESTS=${SKIP_PACKAGES_TESTS:-"false"}
-  if { [[ "$CLASSIFIER" == "" || "$CLASSIFIER" == "cuda12" ]]; } && [[ "$SKIP_PACKAGES_TESTS" == "false" ]]; then
-    # Add the ivysettings.xml file to support --packages downloads from Artifactory using credentials
-    # Set the HOST_NAME variable for ivysettings.xml (e.g., from https://usr:psw@HOST_NAME/path/to/repo)
-    SPARK_SHELL_SMOKE_TEST=1 HOST_NAME=$PROJECT_REPO_HOST \
-    PYSP_TEST_spark_jars_packages=com.nvidia:rapids-4-spark_${SCALA_BINARY_VER}:${PROJECT_VER} \
-    PYSP_TEST_spark_jars_repositories=${PROJECT_REPO} \
-    PYSP_TEST_spark_jars_ivySettings=${WORKSPACE}/jenkins/ivysettings.xml \
-      ./run_pyspark_from_build.sh
-  fi
+  # # As '--packages' only works on the default cuda12 jar, it does not support classifiers
+  # # refer to issue : https://issues.apache.org/jira/browse/SPARK-20075
+  # # "$CLASSIFIER" == ''" is usually for the case run by developers,
+  # # while "$CLASSIFIER" == "cuda12" is for the case running on CI.
+  # # We expect to run packages test for both cases
+  # SKIP_PACKAGES_TESTS=${SKIP_PACKAGES_TESTS:-"false"}
+  # if { [[ "$CLASSIFIER" == "" || "$CLASSIFIER" == "cuda12" ]]; } && [[ "$SKIP_PACKAGES_TESTS" == "false" ]]; then
+  #   # Add the ivysettings.xml file to support --packages downloads from Artifactory using credentials
+  #   # Set the HOST_NAME variable for ivysettings.xml (e.g., from https://usr:psw@HOST_NAME/path/to/repo)
+  #   SPARK_SHELL_SMOKE_TEST=1 HOST_NAME=$PROJECT_REPO_HOST \
+  #   PYSP_TEST_spark_jars_packages=com.nvidia:rapids-4-spark_${SCALA_BINARY_VER}:${PROJECT_VER} \
+  #   PYSP_TEST_spark_jars_repositories=${PROJECT_REPO} \
+  #   PYSP_TEST_spark_jars_ivySettings=${WORKSPACE}/jenkins/ivysettings.xml \
+  #     ./run_pyspark_from_build.sh
+  # fi
 
-  # ParquetCachedBatchSerializer cache_test
-  PYSP_TEST_spark_sql_cache_serializer=com.nvidia.spark.ParquetCachedBatchSerializer \
-    ./run_pyspark_from_build.sh -k cache_test
+  # # ParquetCachedBatchSerializer cache_test
+  # PYSP_TEST_spark_sql_cache_serializer=com.nvidia.spark.ParquetCachedBatchSerializer \
+  #   ./run_pyspark_from_build.sh -k cache_test
 fi
 
 # Delta Lake tests

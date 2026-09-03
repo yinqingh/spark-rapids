@@ -101,7 +101,7 @@ object GpuGroupPartitionsExecInfo {
       groupPartitions.joinKeyPositions,
       groupPartitions.expectedPartitionKeys.map(_.size),
       groupPartitions.reducers.map(
-        _.map(_.map(_.displayName()).getOrElse("identity"))),
+        _.map(_.map(_.toString).getOrElse("identity"))),
       groupPartitions.distributePartitions,
       groupPartitions.enableSortedMerge)
   }

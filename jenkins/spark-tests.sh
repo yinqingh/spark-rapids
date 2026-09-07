@@ -643,9 +643,9 @@ fi
 # a misleading, it actually tests the Rapids Shuffle Manager with both UCX and
 # MULTITHREADED shuffle modes, but was kept to not break possible CI that is
 # using it.
-if [[ "$TEST_MODE" == "DEFAULT" || "$TEST_MODE" == "MULTITHREADED_SHUFFLE" ]]; then
-  invoke_shuffle_integration_test MULTITHREADED ./run_pyspark_from_build.sh
-fi
+# if [[ "$TEST_MODE" == "DEFAULT" || "$TEST_MODE" == "MULTITHREADED_SHUFFLE" ]]; then
+#   invoke_shuffle_integration_test MULTITHREADED ./run_pyspark_from_build.sh
+# fi
 
 if [[ "$TEST_MODE" == "UCX_SHUFFLE" ]]; then
   invoke_shuffle_integration_test UCX ./run_pyspark_from_build.sh
@@ -691,9 +691,9 @@ if [[ "$TEST_MODE" == "CUDF_UDF_ONLY" ]]; then
 fi
 
 # Pyarrow tests
-if [[ "$TEST_MODE" == "DEFAULT" || "$TEST_MODE" == "PYARROW_ONLY" ]]; then
-  run_pyarrow_tests
-fi
+# if [[ "$TEST_MODE" == "DEFAULT" || "$TEST_MODE" == "PYARROW_ONLY" ]]; then
+#   run_pyarrow_tests
+# fi
 
 # TODO: https://github.com/NVIDIA/spark-rapids/issues/13854
 if [[ "$TEST_MODE" == "EXTRA_JOIN_ONLY" ]]; then

@@ -26,6 +26,11 @@ import org.apache.spark.sql.rapids.ProxyRapidsShuffleInternalManagerBase;
 /**
  * Spark 5 requires custom shuffle managers to implement BlockingShuffleManager.
  * Keep that package-private Spark type in Spark's package so Scaladoc can resolve it.
+ *
+ * Spark instantiates {@code spark.shuffle.manager} before ShimLoader is active, so this
+ * class must also be copied to the dist jar root via {@code unshimmed-from-each-spark3xx.txt}.
+ * Leaving it only under {@code spark500/} causes NoClassDefFoundError when defining
+ * {@code com.nvidia.spark.rapids.spark500.RapidsShuffleManager}.
  */
 public abstract class RapidsShuffleManagerBase extends ProxyRapidsShuffleInternalManagerBase
     implements BlockingShuffleManager {

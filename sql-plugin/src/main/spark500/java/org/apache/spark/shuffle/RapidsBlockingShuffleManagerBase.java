@@ -32,9 +32,9 @@ import org.apache.spark.sql.rapids.ProxyRapidsShuffleInternalManagerBase;
  * Leaving it only under {@code spark500/} causes NoClassDefFoundError when defining
  * {@code com.nvidia.spark.rapids.spark500.RapidsShuffleManager}.
  */
-public abstract class RapidsShuffleManagerBase extends ProxyRapidsShuffleInternalManagerBase
-    implements BlockingShuffleManager {
-  protected RapidsShuffleManagerBase(SparkConf conf, boolean isDriver) {
+public abstract class RapidsBlockingShuffleManagerBase
+    extends ProxyRapidsShuffleInternalManagerBase implements BlockingShuffleManager {
+  protected RapidsBlockingShuffleManagerBase(SparkConf conf, boolean isDriver) {
     super(conf, isDriver);
   }
 }

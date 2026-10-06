@@ -732,7 +732,17 @@ if [[ "$TEST_MODE" == "DEFAULT" || "$TEST_MODE" == "MULTITHREADED_SHUFFLE" ]]; t
 fi
 
 if [[ "$TEST_MODE" == "UCX_SHUFFLE" ]]; then
-  invoke_shuffle_integration_test UCX ./run_pyspark_from_build.sh
+  # Disable pytest parallelism and use two single-core executors in the same 
+  # application to exercise UCX remote fetches;
+  # parallel applications with one executor each cannot provide this coverage.
+  # Match the premerge GPU memory settings for the two executors sharing a GPU.
+  TEST_PARALLEL=0 \
+  PYSP_TEST_spark_cores_max=2 \
+  PYSP_TEST_spark_executor_cores=1 \
+  PYSP_TEST_spark_rapids_memory_gpu_minAllocFraction=0 \
+  PYSP_TEST_spark_rapids_memory_gpu_maxAllocFraction=0.1 \
+  PYSP_TEST_spark_rapids_memory_gpu_allocFraction=0.1 \
+    invoke_shuffle_integration_test UCX ./run_pyspark_from_build.sh
 fi
 
 # cudf_udf test: this mostly depends on cudf-py, so we run it into an independent CI

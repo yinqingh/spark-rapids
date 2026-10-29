@@ -321,7 +321,8 @@ object JsonPartitionReader {
               case Some(encoding) =>
                 val text = new Text()
                 text.set(line, offset, len)
-                CreateJacksonParser.text(encoding, jsonFactory, text)
+                CreateJacksonParser.text(encoding, parsedOptions.legacyJavaCharsets,
+                  parsedOptions.legacyCodingErrorAction, jsonFactory, text)
               case None => jsonFactory.createParser(line, offset, len)
             }
             withResource(parser) { jsonParser =>

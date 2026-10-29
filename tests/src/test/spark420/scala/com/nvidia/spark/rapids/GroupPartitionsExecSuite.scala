@@ -65,6 +65,9 @@ class GroupPartitionsExecSuite extends SparkQueryCompareTestSuite {
     val child = spy(LocalTableScanExec(if (output.nonEmpty) output else Seq(key), Nil, None))
     doReturn(KeyedPartitioning(Seq(key), Seq(InternalRow(0))))
       .when(child).outputPartitioning
+    if (enableSortedMerge) {
+      doReturn(Seq(SortOrder(key, Ascending))).when(child).outputOrdering
+    }
     GroupPartitionsExecTestShim(child, enableSortedMerge)
   }
 

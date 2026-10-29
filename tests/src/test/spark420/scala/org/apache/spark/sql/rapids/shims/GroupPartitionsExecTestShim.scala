@@ -28,6 +28,7 @@ import org.apache.spark.sql.execution.datasources.v2.GroupPartitionsExec
 // without duplicating the suite or assembling the factory's derived planning state.
 object GroupPartitionsExecTestShim {
   def apply(child: SparkPlan, enableSortedMerge: Boolean): GroupPartitionsExec = {
-    GroupPartitionsExec(child, enableSortedMerge = enableSortedMerge)
+    GroupPartitionsExec(child,
+      sortedMergeOrdering = if (enableSortedMerge) Some(child.outputOrdering) else None)
   }
 }
